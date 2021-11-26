@@ -1,0 +1,32 @@
+---
+# The tasks to join cluster
+- name: Wait until the file ./join-command-vars.yaml is present before continuing
+  ansible.builtin.wait_for:
+    path: ./join-command-vars.yaml
+    state: present
+    sleep: 2
+    msg: | 
+      Timeout to find file ./join-command-vars.yaml. 
+      If kubeadm init takes longer than ANSIBLE_WAITFOR_TIMEOUT,
+      you can modify the config.yaml/ansible/waitfor_seconds.
+    timeout: "{{ ANSIBLE_WAITFOR_TIMEOUT }}"
+  delegate_to: 127.0.0.1
+  become: false 
+
+- name: Import vars 
+  ansible.builtin.include_vars: 
+    file: join-command-vars.yaml
+
+- name: Configure the template 
+  ansible.builtin.template:
+    src: kubeadm-join.yaml.j2
+    dest: ./kubeadm-join.yaml 
+
+- name: Join the cluster 
+  ansible.builtin.shell: kubeadm join --config ./kubeadm-join.yaml 
+
+- name: Delete kubeadm-join.yaml
+  ansible.builtin.file:
+    path: ./kubeadm-join.yaml 
+    state: absent
+

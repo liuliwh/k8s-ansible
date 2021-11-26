@@ -1,0 +1,28 @@
+---
+# Only include the tasks when ha.isHaNode == true
+# Include the tasks before init.
+# Include the tasks after join.
+# Reference: https://github.com/kubernetes/kubeadm/blob/main/docs/ha-considerations.md , add "script_user nobody" into section "global_defs" of keepalived.conf
+
+- name: Create keepalived and haproxy directory
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - /etc/keepalived/
+    - /etc/haproxy/
+
+- name: Configure keepalived and haproxy static pods
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: "keepalived.conf", dest: "/etc/keepalived/keepalived.conf"}
+    - { src: "check_apiserver.sh", dest: "/etc/keepalived/check_apiserver.sh"}
+    - { src: "haproxy.cfg.j2",  dest: "/etc/haproxy/haproxy.cfg"}
+    - { src: "keepalived.yaml", dest: "/etc/kubernetes/manifests/keepalived.yaml"}
+    - { src: "haproxy.yaml", dest: "/etc/kubernetes/manifests/haproxy.yaml"}
+
+- name: Flag ha['configured'] as true
+  ansible.builtin.set_fact: 
+    ha: '{{ ha | combine({ "configured": true}) }}'

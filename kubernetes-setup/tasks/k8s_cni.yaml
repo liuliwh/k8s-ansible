@@ -1,0 +1,14 @@
+---
+- name: Set manifests location based on calico version
+  ansible.builtin.set_fact:
+    calico_manifest: "{% if CALICO_VERSION=='latest' %}{{ '' }} {% else %} {{ 'archive/' ~ CALICO_VERSION }}{% endif %}"
+
+- name: Install CNI - Calico
+  become: false 
+  ansible.builtin.shell: "{{ item }}"
+  with_items:
+    - kubectl create -f https://docs.projectcalico.org/{{ calico_manifest | trim() }}/manifests/tigera-operator.yaml
+    - kubectl create -f https://docs.projectcalico.org/{{ calico_manifest | trim() }}/manifests/custom-resources.yaml
+
+- name: Flag cniInstalled as true
+  ansible.builtin.set_fact: cniInstalled=true

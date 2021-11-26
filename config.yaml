@@ -1,0 +1,23 @@
+local:
+  box: "generic/ubuntu2004"
+
+infrast:
+  # The static ip for eth1, is used for k8s 
+  ip_base: "192.168.34."
+  master_cpu: 2
+  master_mem: 2048
+  node_cpu: 2
+  node_mem: 2048
+
+kubernetes:
+  masters: 1 # The number of masters to use. 
+  minions: 2 # Number of minions to be used in the Kubernetes cluster
+  version: latest # kubernetes version ,or eg. v1.22.4
+  haproxy_version : "2.1.4" 
+  keepalived_version : "2.0.17"
+  calico_version: latest # or eg. v3.20
+
+ansible:
+  # Ansible wait for default timeout in seconds.
+  # Used in tasks/k8s_join.yaml: join tasks needs to wait until init tasks finsihed
+  waitfor_seconds: 300

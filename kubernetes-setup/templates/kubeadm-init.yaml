@@ -1,0 +1,21 @@
+---
+# k8s_init.yaml
+kind: ClusterConfiguration
+apiVersion: kubeadm.k8s.io/v1beta3
+networking:
+  podSubnet: "192.168.0.0/16"
+controlPlaneEndpoint: "{{ CONTROL_PLANE_ENDPOINT | mandatory }}"
+
+---
+kind: KubeletConfiguration
+apiVersion: kubelet.config.k8s.io/v1beta1
+cgroupDriver: systemd
+
+---
+kind: InitConfiguration
+apiVersion: kubeadm.k8s.io/v1beta3
+localAPIEndpoint:
+  advertiseAddress: "{{ ansible_eth1.ipv4.address }}"
+nodeRegistration:
+  kubeletExtraArgs: 
+    node-ip: "{{ ansible_eth1.ipv4.address }}"

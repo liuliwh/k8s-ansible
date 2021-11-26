@@ -1,0 +1,45 @@
+---
+# The tasks to init the k8s cluster
+
+- name: Configure kubeadmin config template 
+  ansible.builtin.template: 
+    src: kubeadm-init.yaml
+    dest: ./kubeadm-init.yaml  
+
+- name: Init k8s cluster on master-1 
+  ansible.builtin.shell: kubeadm init --config ./kubeadm-init.yaml --upload-certs | tee ./join-command-orig 
+
+- name: Setup kubeconfig for vagrant user
+  ansible.builtin.command: "{{ item }}"
+  with_items:
+   - mkdir -p /home/vagrant/.kube
+   - cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
+   - chown vagrant:vagrant /home/vagrant/.kube/config
+
+- name: Flag kubeConfigured as true
+  ansible.builtin.set_fact: kubeConfigured=true
+
+- name: Install CNI plugins
+  import_tasks: tasks/k8s_cni.yaml
+  when: (cniInstalled is undefined) or (cniInstalled != true ) 
+  
+- name: Extract join-command from kubeadm init output
+  ansible.builtin.shell: 
+    cmd: grep -A3 -E '^\s+kubeadm join' ./join-command-orig | tr -d '\n' | tr -d '\' | tee ./join-command 
+    warn: no
+
+- name: Extract option lines from the join command
+  ansible.builtin.shell: |
+      awk -F '--' '{for(i=2;i<=NF;i++) {printf "%s\n", $i}}' ./join-command | \
+      awk '{printf "%s: %s \n", $1,$2}' | \
+      tr '-' '_'   
+  register: join_vars
+
+- name: assert the join is successful
+  ansible.builtin.assert:
+    that: 
+      - join_vars.stdout | length > 0 
+
+- name: Save join command variables
+  become: false
+  local_action: copy content="{{ join_vars.stdout }}" dest="./join-command-vars.yaml"

@@ -1,0 +1,72 @@
+---
+# https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/
+- name: Remove swapfile from /etc/fstab
+  ansible.posix.mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  with_items:
+    - swap
+    - none
+
+- name: Disable swap 
+  ansible.builtin.command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+
+- name: "Install required package on Ubuntu"
+  ansible.builtin.apt: 
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+      - ca-certificates 
+      - curl 
+      - gnupg 
+      - apt-transport-https
+    
+- name: "Add gpg key (Ubuntu)"
+  ansible.builtin.apt_key:
+    url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    state: present
+
+- name: "Add kubernetes source list (Ubuntu)"
+  ansible.builtin.apt_repository:
+    repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+    state: present
+    filename: "kubernetes"
+
+- name: Get actual version number if latest is used
+  ansible.builtin.shell: curl -L -s https://dl.k8s.io/release/stable.txt 
+  register: kubeVersion
+  when: KUBERNETES_VERSION == 'latest'
+
+- name: Set kubernetes version
+  ansible.builtin.set_fact:
+    kubeVersion: "{% if KUBERNETES_VERSION=='latest' %}{{ kubeVersion.stdout }} {% else %} {{ KUBERNETES_VERSION }}{% endif %}"
+
+- name: Append -00 if version doesn't contain "-"
+  ansible.builtin.set_fact:
+    kubeVersion: "{{ kubeVersion | trim() ~ '-00' }}"
+  when: not kubeVersion is search("-")
+
+- name: "Install kubelet, kubeadm, kubectl (Ubuntu)"
+  ansible.builtin.apt: 
+    name: "{{ packages | replace('v','') }}" 
+    state: present
+    update_cache: yes 
+  vars:
+    packages:
+      - kubelet={{ kubeVersion }}
+      - kubeadm={{ kubeVersion }}
+      - kubectl={{ kubeVersion }}
+
+- name: Hold kubelet, kubeadm, kubectl (Ubuntu)
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold 
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl
+

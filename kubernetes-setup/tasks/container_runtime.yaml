@@ -1,0 +1,60 @@
+--- 
+# Tasks to install containerd https://kubernetes.io/docs/setup/production-environment/container-runtimes/#containerd
+- name: "Install required package on Ubuntu"
+  ansible.builtin.apt: 
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages: 
+      - ca-certificates 
+      - curl 
+      - gnupg 
+      - apt-transport-https
+    
+- name: load modules for containerd 
+  ansible.builtin.blockinfile:
+    path: /etc/modules-load.d/containerd.conf
+    state: present
+    create: yes
+    block: |
+      overlay
+      br_netfilter
+
+- name: probe modules for containerd
+  community.general.modprobe:
+    name: "{{ item }}" 
+    state: present
+  loop: 
+    - overlay
+    - br_netfilter
+
+- name: Apply sysctl params for containerd
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    sysctl_set: yes
+    state: present
+    reload: yes
+    sysctl_file: /etc/sysctl.d/99-kubernetes-cri.conf
+  loop: 
+    - {name: "net.bridge.bridge-nf-call-iptables", value: 1}
+    - {name: "net.ipv4.ip_forward", value: 1}
+    - {name: "net.bridge.bridge-nf-call-ip6tables", value: 1}
+
+- name: Add apt key for containerd
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+
+- name: Add repo for containerd 
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ansible_distribution_release}} stable"
+    state: present
+    filename: docker 
+
+- name: Install containerd
+  ansible.builtin.apt:
+    name: containerd
+    state: present
+    update_cache: yes 

@@ -1,0 +1,26 @@
+---
+# Tasks on control plane after init/join
+- name: Config KeepAlived and HAProxy as static pod
+  import_tasks: tasks/k8s_ha.yaml
+  when: ha['isHANode'] == true and ha['configured'] == false
+  
+- name: Setup kubeconfig for vagrant user
+  ansible.builtin.command: "{{ item }}"
+  with_items:
+   - mkdir -p /home/vagrant/.kube
+   - cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
+   - chown vagrant:vagrant /home/vagrant/.kube/config
+  when: (kubeConfigured is undefined) or (kubeConfigured != true ) 
+
+- name: Set kubectl bash autocompletion and common alias
+  ansible.builtin.blockinfile:
+    path: /home/vagrant/.bashrc
+    state: present
+    block: |
+      source <(kubectl completion bash)
+      alias k=kubectl
+      alias ks='kubectl -n kube-system'
+      complete -F __start_kubectl k
+      
+
+    
