@@ -4,25 +4,24 @@ kind: Deployment
 metadata:
   labels:
     app.kubernetes.io/name: httpserver
-  name: httpserver
+  name: httpserver-deployment
+  namespace: default
 spec:
   replicas: 2
   selector:
     matchLabels:
       app.kubernetes.io/name: httpserver
-      app: httpserver
   template:
     metadata:
       labels:
         app.kubernetes.io/name: httpserver
-        app: httpserver
     spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
           - labelSelector:
               matchExpressions:
-              - key: app
+              - key: app.kubernetes.io/name
                 operator: In
                 values:
                 - httpserver
@@ -55,16 +54,6 @@ spec:
             periodSeconds: 1
             successThreshold: 1
             timeoutSeconds: 15
-          startupProbe:
-            failureThreshold: 3
-            httpGet:
-              path: /healthz
-              port: 8080
-              scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 15
           ports:
             - name: http
               containerPort: 8080
@@ -78,9 +67,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    app.kubernetes.io/name: httpserver
-  name: httpservice
+  name: httpserver-service
+  namespace: default
 spec:
   type: ClusterIP
   ports:
@@ -97,6 +85,10 @@ metadata:
   namespace: default
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts: 
+      - httpserver.localdev.me
+      secretName: httpserver-localdev-tls
   rules:
   - host: httpserver.localdev.me
     http:
@@ -104,7 +96,7 @@ spec:
         - path: /
           backend:
             service:
-              name: httpservice
+              name: httpserver-service
               port:
                 number: 8080
           pathType: Prefix

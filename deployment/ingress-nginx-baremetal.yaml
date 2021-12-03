@@ -274,6 +274,8 @@ metadata:
   namespace: ingress-nginx
 spec:
   type: LoadBalancer
+  # this setting is t make sure the source IP address is preserved.
+  externalTrafficPolicy: Local
   ipFamilyPolicy: SingleStack
   ipFamilies:
     - IPv4
@@ -293,9 +295,9 @@ spec:
     app.kubernetes.io/instance: ingress-nginx
     app.kubernetes.io/component: controller
 ---
-# Source: ingress-nginx/templates/controller-deployment.yaml
+# Source: ingress-nginx/templates/controller-daemonSet.yaml
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   labels:
     helm.sh/chart: ingress-nginx-4.0.10
@@ -307,7 +309,6 @@ metadata:
   name: ingress-nginx-controller
   namespace: ingress-nginx
 spec:
-  replicas: 2
   selector:
     matchLabels:
       app.kubernetes.io/name: ingress-nginx

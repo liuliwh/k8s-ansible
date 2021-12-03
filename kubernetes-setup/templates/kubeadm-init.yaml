@@ -19,3 +19,8 @@ localAPIEndpoint:
 nodeRegistration:
   kubeletExtraArgs: 
     node-ip: "{{ ansible_eth1.ipv4.address }}"
+
+---
+kind: KubeProxyConfiguration
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+mode: "{{ KUBE_PROXY_MODE | default('') }}"

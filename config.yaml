@@ -16,6 +16,7 @@ kubernetes:
   haproxy_version : "2.1.4" 
   keepalived_version : "2.0.17"
   calico_version: latest # or eg. v3.20
+  kube_proxy_mode: "" # or eg: "iptables","ipvs"
 
 ansible:
   # Ansible wait for default timeout in seconds.

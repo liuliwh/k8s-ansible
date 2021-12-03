@@ -69,7 +69,8 @@ Vagrant.configure('2') do |config|
           CONTROL_PLANE_ENDPOINT: control_plane_endpoint,
           ANSIBLE_WAITFOR_TIMEOUT: vagrant_config['ansible']['waitfor_seconds'],
           isControlplane: true,
-          ha: ha
+          ha: ha,
+          KUBE_PROXY_MODE: vagrant_config['kubernetes']['kube_proxy_mode'],
         }
       end
     end
@@ -95,6 +96,7 @@ Vagrant.configure('2') do |config|
           KUBERNETES_VERSION: vagrant_config['kubernetes']['version'],
           CONTROL_PLANE_ENDPOINT: control_plane_endpoint,
           ANSIBLE_WAITFOR_TIMEOUT: vagrant_config['ansible']['waitfor_seconds'],
+          KUBE_PROXY_MODE: vagrant_config['kubernetes']['kube_proxy_mode'],
         }
       end
     end
