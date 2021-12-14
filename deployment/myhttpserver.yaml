@@ -13,10 +13,6 @@ spec:
       app.kubernetes.io/name: httpserver
   template:
     metadata:
-      annotations:
-        prometheus.io/path: /metrics
-        prometheus.io/port: "8080"
-        prometheus.io/scrape: "true"    
       labels:
         app.kubernetes.io/name: httpserver
     spec:
@@ -71,6 +67,8 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  labels:
+      app.kubernetes.io/name: httpserver
   name: httpserver-service
   namespace: default
 spec:
@@ -81,26 +79,26 @@ spec:
       targetPort: 8080
   selector:
     app.kubernetes.io/name: httpserver
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: httpserver-ingress
-  namespace: default
-spec:
-  ingressClassName: nginx
-  tls:
-    - hosts: 
-      - httpserver.localdev.me
-      secretName: httpserver-localdev-tls
-  rules:
-  - host: httpserver.localdev.me
-    http:
-      paths:
-        - path: /
-          backend:
-            service:
-              name: httpserver-service
-              port:
-                number: 8080
-          pathType: Prefix
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: httpserver-ingress
+#   namespace: default
+# spec:
+#   ingressClassName: nginx
+#   tls:
+#     - hosts: 
+#       - httpserver.localdev.me
+#       secretName: httpserver-localdev-tls
+#   rules:
+#   - host: httpserver.localdev.me
+#     http:
+#       paths:
+#         - path: /
+#           backend:
+#             service:
+#               name: httpserver-service
+#               port:
+#                 number: 8080
+#           pathType: Prefix
