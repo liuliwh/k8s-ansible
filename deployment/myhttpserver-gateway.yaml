@@ -1,0 +1,41 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: httpserver-gateway
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: httpserver
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - httpserver-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /httpservervice
+    route:
+    - destination:
+        host: httpserver-service
+        port:
+          number: 80
+  # - match:
+  #   - uri:
+  #       prefix: /nginx
+  #   route:
+  #   - destination:
+  #       host: nginx.default.svc.cluster.local
+  #       port:
+  #         number: 80
