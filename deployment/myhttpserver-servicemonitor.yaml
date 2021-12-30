@@ -2,10 +2,9 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   labels:
-    app.kubernetes.io/name: httpserver
+    app: httpserver
     team: frontend
   name: httpserver
-  namespace: default
 spec:
   endpoints:
   - port: http
@@ -14,4 +13,4 @@ spec:
     - default
   selector:
     matchLabels:
-      app.kubernetes.io/name: httpserver
+      app: httpserver

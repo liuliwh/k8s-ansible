@@ -5,7 +5,6 @@ metadata:
   labels:
     grafana_dashboard: "1"
   name: httpserver-grafana-dashboard
-  namespace: default
 data:
   httpserver-grafana-dashboard.json: |-
     {

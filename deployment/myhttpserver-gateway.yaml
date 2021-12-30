@@ -24,18 +24,14 @@ spec:
   - httpserver-gateway
   http:
   - match:
-    - uri:
-        prefix: /httpservervice
+    - headers:
+        tester: 
+          prefix: tid
     route:
     - destination:
-        host: httpserver-service
-        port:
-          number: 80
-  # - match:
-  #   - uri:
-  #       prefix: /nginx
-  #   route:
-  #   - destination:
-  #       host: nginx.default.svc.cluster.local
-  #       port:
-  #         number: 80
+        host: httpserver
+        subset: v2
+  - route:
+    - destination:
+        host: httpserver
+        subset: v1
