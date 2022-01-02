@@ -21,7 +21,7 @@ spec:
       serviceAccountName: httpserver-default
       containers:
         - name: httpserver
-          image: sarah4test/httpserver:latest@sha256:de2a3dffbd3ff510175f2819aadb9d5ad8edb74bde8dc5606baf148ec0d14292
+          image: sarah4test/httpserver:tracing@sha256:e9a929be9db6d1e788fac8aa6fbb73361d7f6909180da451bc70a24f9bc9603b
           env:
             - name: VERSION
               value: "v1.0.1"
@@ -31,7 +31,7 @@ spec:
             failureThreshold: 5
             httpGet:
               path: /healthz
-              port: 8080
+              port: http
               scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -41,14 +41,15 @@ spec:
             failureThreshold: 3
             httpGet:
               path: /readiness
-              port: 8080
+              port: http
               scheme: HTTP
             initialDelaySeconds: 0
             periodSeconds: 1
             successThreshold: 1
             timeoutSeconds: 15
           ports:
-            - containerPort: 8080
+            - containerPort: 9080
+              name: http
           resources:
             requests:
               cpu: 100m
@@ -79,7 +80,7 @@ spec:
       serviceAccountName: httpserver-default
       containers:
         - name: httpserver
-          image: sarah4test/httpserver:latest@sha256:de2a3dffbd3ff510175f2819aadb9d5ad8edb74bde8dc5606baf148ec0d14292
+          image: sarah4test/httpserver:tracing@sha256:e9a929be9db6d1e788fac8aa6fbb73361d7f6909180da451bc70a24f9bc9603b
           env:
             - name: VERSION
               value: "v2.0.1"
@@ -89,7 +90,7 @@ spec:
             failureThreshold: 5
             httpGet:
               path: /healthz
-              port: 8080
+              port: http
               scheme: HTTP
             initialDelaySeconds: 10
             periodSeconds: 10
@@ -99,14 +100,15 @@ spec:
             failureThreshold: 3
             httpGet:
               path: /readiness
-              port: 8080
+              port: http
               scheme: HTTP
             initialDelaySeconds: 0
             periodSeconds: 1
             successThreshold: 1
             timeoutSeconds: 15
           ports:
-            - containerPort: 8080
+            - containerPort: 9080
+              name: http
           resources:
             requests:
               cpu: 100m
@@ -132,6 +134,6 @@ metadata:
 spec:
   ports:
     - name: http
-      port: 8080
+      port: 9080
   selector:
     app: httpserver

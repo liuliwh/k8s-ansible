@@ -1,0 +1,103 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dummy-service
+  labels:
+    account: service0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service1
+  labels:
+    app: service1
+    service: service1
+spec:
+  ports:
+  - port: 9080
+    name: http
+  selector:
+    app: service1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service1-v1
+  labels:
+    app: service1
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service1
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: service1
+        version: v1
+    spec:
+      serviceAccountName: dummy-service
+      containers:
+      - name: service1
+        image: sarah4test/httpserver:tracing@sha256:e9a929be9db6d1e788fac8aa6fbb73361d7f6909180da451bc70a24f9bc9603b
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: VERSION
+            value: "v1.0.1"
+          - name: VERBOSE
+            value: "2"    
+        ports:
+        - containerPort: 9080
+        securityContext:
+          runAsUser: 1000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service2
+  labels:
+    app: service2
+    service: service2
+spec:
+  ports:
+  - port: 9080
+    name: http
+  selector:
+    app: service2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: service2-v1
+  labels:
+    app: service2
+    version: v1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: service2
+      version: v1
+  template:
+    metadata:
+      labels:
+        app: service2
+        version: v1
+    spec:
+      serviceAccountName: dummy-service
+      containers:
+      - name: service2
+        image: sarah4test/httpserver:tracing@sha256:e9a929be9db6d1e788fac8aa6fbb73361d7f6909180da451bc70a24f9bc9603b
+        imagePullPolicy: IfNotPresent
+        env:
+          - name: VERSION
+            value: "v1.0.1"
+          - name: VERBOSE
+            value: "2"    
+        ports:
+        - containerPort: 9080
+        securityContext:
+          runAsUser: 1000

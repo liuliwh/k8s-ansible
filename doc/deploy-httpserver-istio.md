@@ -13,7 +13,11 @@
   - [istio apply mutal tls (destination-rule)](#istio-apply-mutal-tls-destination-rule)
 - [Tracing](#tracing)
   - [Deploy tracer (zipkin)](#deploy-tracer-zipkin)
+  - [Deploy more services to mimic tracing chain](#deploy-more-services-to-mimic-tracing-chain)
+    - [部署各dummy service](#部署各dummy-service)
+    - [验证 httpserver 与 各dummy service的调用](#验证-httpserver-与-各dummy-service的调用)
   - [Generate test data](#generate-test-data)
+  - [查看dashboard (zipkin dashboard)结果](#查看dashboard-zipkin-dashboard结果)
 # Description
 Deploy httpserver with istio.
 ## Request routing
@@ -102,7 +106,32 @@ Based on the configuration, the default tracer backend is zipkin, so we just int
 ```bash
 sarah@sarah-510-p127c:~/k8s_ansible$ kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.12/samples/addons/extras/zipkin.yaml
 ```
-## Generate test data
+## Deploy more services to mimic tracing chain
+根据istio zipkin integration 文档，且前面的deployment已经部署httpserver service, VirtualService, 以及ingressgateway for httpserver。且ingressgateway会自动插入 x-b3- 相关请求头。
+以下将模拟以下调用链，当请求 httpserver 服务的/service0 时，httpserver 会开启httpclient请求 dummy service。 各dummy service的调用链为: service0 -> service1 -> service2.
+由于ingressgateway 已经插入相关头，在httpserver以及各dummyserver 以 httpclient 身份请求下一服务时，仅需要 forward 这些请求头即可。 
+### 部署各dummy service
 ```bash
-for i in {1..100}; do curl $GATEWAY_URL/httpservervice/ -s > /dev/null ; done;
+sarah@sarah-510-p127c:~/k8s_ansible$ k apply -f deployment/dummyservice/
 ```
+### 验证 httpserver 与 各dummy service的调用
+```bash
+sarah@sarah-510-p127c:~/k8s_ansible$ curl $GATEWAY_URL/service0
+Response from service0: Response from service1: ok
+```
+## Generate test data
+默认的traceSample是1，即1%。
+```bash
+k -n istio-system get istiooperators.install.istio.io -oyaml | grep traceSampling:
+        traceSampling: 1
+```
+为了在dashboard中看到结果,我们发起100个请求
+```bash
+for i in {1..100}; do curl $GATEWAY_URL/service0 -s > /dev/null ; done;
+```
+## 查看dashboard (zipkin dashboard)结果
+1. Launch zipkin dashboard
+```bash
+sarah@sarah-510-p127c:~/k8s_ansible$ istioctl dashboard zipkin 
+```
+2. 在浏览器中 search by serviceName -> Run query, find the span -> Show 即可看到对应 traceid 以及耗时等。也可通过 Depedencies看到调用图。
